@@ -29,8 +29,45 @@ providers: [
 ];
 ```
 
-The runtime that owns the container is responsible for awaiting each collection at the
-right phase (init on start; drain then teardown on stop).
+## Register hooks
+
+Prefer the typed helpers over `TOKEN.withFactory(...)`. The factory runs in injection
+context, so it can `nodeInject` dependencies and close over them in the hook:
+
+```ts
+import { provideAsyncInit, provideShutdownDrain, provideAsyncShutdown } from '@illuma/lifecycle';
+
+providers: [
+  provideAsyncInit(() => {
+    const db = nodeInject(DATABASE);
+    return () => db.connect();
+  }),
+  provideShutdownDrain(() => () => server.stopAcceptingNewRequests()),
+  provideAsyncShutdown(() => () => db.close()),
+];
+```
+
+## Drive them (runtime)
+
+The runtime that owns the container injects each collection and runs it at the right
+phase. The runners encapsulate ordering + failure isolation, so you don't re-roll it:
+
+```ts
+import { runAsyncInit, runShutdown } from '@illuma/lifecycle';
+
+// boot — sequential, fail-fast (a bad init must abort startup)
+await runAsyncInit(nodeInject(ASYNC_INIT_NODE));
+
+// SIGTERM — drain intake (concurrent), then tear down (sequential). A failing
+// hook is isolated so it can't strand the rest; surface it via onError.
+await runShutdown(
+  nodeInject(SHUTDOWN_DRAIN_NODE),
+  nodeInject(ASYNC_SHUTDOWN_NODE),
+  (err) => logger.error('shutdown hook failed', err),
+);
+```
+
+`runShutdownDrain` and `runAsyncShutdown` are exported too if you need the phases apart.
 
 ## License
 
