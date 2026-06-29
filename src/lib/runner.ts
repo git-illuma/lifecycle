@@ -10,6 +10,11 @@ async function isolate(
   hook: () => Promise<void>,
   onError?: HookErrorHandler,
 ): Promise<void> {
+  if (!onError) {
+    await hook();
+    return;
+  }
+
   try {
     await hook();
   } catch (error) {
