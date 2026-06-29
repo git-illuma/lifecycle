@@ -1,0 +1,20 @@
+{
+  "compileOnSave": true,
+  "compilerOptions": {
+    "rootDir": "src",
+    "module": "ES2022",
+    "target": "ES2022",
+    "moduleResolution": "bundler",
+    "importHelpers": true,
+    "baseUrl": "./src",
+    "declaration": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "removeComments": false
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/test-setup.ts", "src/**/*.spec.ts", "src/**/*.test.ts", "dist", "tsup.config.ts", "node_modules"]
+}

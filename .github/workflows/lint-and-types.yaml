@@ -1,0 +1,44 @@
+name: Lint and Type Check
+
+on:
+  workflow_dispatch:
+
+  push:
+    paths:
+      - "src/**"
+    branches:
+      - main
+      - develop
+
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - "src/**"
+    branches:
+      - main
+      - develop
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # JSR slow-types check (exported API must have explicit types)
+      - name: JSR Slow Types Check
+        run: bunx jsr publish --dry-run
+
+      - name: Bun Lint (Biome)
+        run: bun lint
+
+      - name: Type Check
+        run: bun typecheck
