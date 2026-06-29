@@ -7,8 +7,6 @@ knowing about each other.
 
 ```bash
 npm i @illuma/lifecycle
-# or
-bunx jsr add @illuma/lifecycle
 ```
 
 ## Tokens
@@ -68,6 +66,32 @@ await runShutdown(
 ```
 
 `runShutdownDrain` and `runAsyncShutdown` are exported too if you need the phases apart.
+
+## RxJS interop (optional)
+
+`takeUntilDestroyed` lives in a separate `@illuma/lifecycle/rxjs` entry so the main
+package never pulls in RxJS. Importing `@illuma/lifecycle` adds zero RxJS to your bundle;
+RxJS is an **optional peer dependency** — only install it if you use this subpath.
+
+```bash
+npm i rxjs
+```
+
+It completes a stream when the node's `LifecycleRef` fires `beforeDestroy`, so
+subscriptions tear down with the node instead of leaking past it. Called in injection
+context it resolves the `LifecycleRef` itself; pass one explicitly otherwise.
+
+```ts
+import { takeUntilDestroyed } from '@illuma/lifecycle/rxjs';
+
+// in injection context — LifecycleRef is injected for you
+interval(1000)
+  .pipe(takeUntilDestroyed())
+  .subscribe((n) => logger.debug('tick', n));
+
+// or hand it an explicit ref
+source$.pipe(takeUntilDestroyed(lifecycleRef)).subscribe(...);
+```
 
 ## License
 
